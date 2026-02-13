@@ -27,7 +27,7 @@ This notebook tutorial demonstrates the process of querying IRSA's Simple Image 
 
 By the end of this tutorial, you will:
 
-* Learn how to search the NASA Astronomical Virtual Observatory Directory web portal for a service that provides access to IRSA's Spitzer Enhanced Imaging Products (SEIP) images.
+* Learn how to access IRSA's Spitzer Enhanced Imaging Products (SEIP) images via the Simple Image Access v2 (SIAv2) service.
 * Use the Python pyvo package to identify which of IRSA's SEIP images cover a specified coordinate.
 * Download one of the identified images.
 * Create and display a cutout of the downloaded image.
@@ -44,6 +44,10 @@ The [NASA/IPAC Infrared Science Archive (IRSA)](https://irsa.ipac.caltech.edu) a
 Other datasets at IRSA are available through other SIA services:
 
 https://irsa.ipac.caltech.edu/docs/program_interface/api_images.html
+
+```{note}
+IRSA supports both SIA v1 and SIA v2 protocols. The version used depends on the specific dataset. The IRSA website at https://irsa.ipac.caltech.edu/ibe/sia.html provides information on which version each service uses and how to access them.
+```
 
 
 +++
@@ -93,22 +97,26 @@ dec = 77.595559
 pos = SkyCoord(ra=ra, dec=dec, unit='deg')
 ```
 
-## Section 2 - Lookup and define a service for SEIP images
+## Section 2 - Define a service for SEIP images
 
 +++
 
-Start at STScI VAO Registry at https://vao.stsci.edu/keyword-search/
+IRSA provides Simple Image Access (SIA) services for various datasets. A list of available datasets and their access URLs can be found at:
 
-Search on "seip"
+https://irsa.ipac.caltech.edu/ibe/sia.html
 
-Locate the COLLECTION=spitzer_seip from the SIA2 URL https://irsa.ipac.caltech.edu/SIA?COLLECTION=spitzer_seip&
+This tutorial uses SIA v2 for SEIP images.
+
+The SEIP images service URL is:
+
+https://irsa.ipac.caltech.edu/SIA?COLLECTION=spitzer_seip&
 
 +++
 
-To work with PyVO, define this SIAv2 service and use the collection argument separately
+To work with PyVO, define this SIAv2 service and use the collection argument separately:
 
 ```{code-cell} ipython3
-seip_service2= vo.dal.sia2.SIA2Service('https://irsa.ipac.caltech.edu/SIA')
+seip_service2 = vo.dal.sia2.SIA2Service('https://irsa.ipac.caltech.edu/SIA')
 ```
 
 ## Section 3 - Search the service

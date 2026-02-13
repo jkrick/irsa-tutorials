@@ -25,7 +25,7 @@ This notebook tutorial demonstrates the process of querying IRSA's Simple Image 
 
 By the end of this tutorial, you will:
 
-* Learn how to search the NASA Astronomical Virtual Observatory Directory web portal for a service that provides access to IRSA's 2MASS images.
+* Learn how to access IRSA's 2MASS images via the Simple Image Access (SIA) service.
 * Use the Python pyvo package to identify which of IRSA's 2MASS images cover a specified coordinate.
 * Download one of the identified images.
 * Create and display a cutout of the downloaded image.
@@ -42,6 +42,10 @@ The [NASA/IPAC Infrared Science Archive (IRSA)](https://irsa.ipac.caltech.edu) a
 Other datasets at IRSA are available through other SIA services:
 
 https://irsa.ipac.caltech.edu/docs/program_interface/api_images.html
+
+```{note}
+IRSA supports both SIA v1 and SIA v2 protocols. The version used depends on the specific dataset. The IRSA website at https://irsa.ipac.caltech.edu/ibe/sia.html provides information on which version each service uses and how to access them.
+```
 
 +++
 
@@ -90,15 +94,19 @@ dec = 77.595559
 pos = SkyCoord(ra=ra, dec=dec, unit='deg')
 ```
 
-## Section 2 - Lookup and define a service for 2MASS images
+## Section 2 - Define a service for 2MASS images
 
 +++
 
-Start at STScI VAO Registry at https://vao.stsci.edu/keyword-search/
+IRSA provides Simple Image Access (SIA) services for various datasets. A list of available datasets and their access URLs can be found at:
 
-Limit by Publisher "NASA/IPAC Infrared Science Archive" and Capability Type "Simple Image Access Protocol" then search on "2MASS"
+https://irsa.ipac.caltech.edu/ibe/sia.html
 
-Locate the SIA URL https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?type=at&ds=asky&
+This tutorial uses SIA v1 for 2MASS All-Sky Atlas images.
+
+The 2MASS All-Sky Atlas images service URL is:
+
+https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?type=at&ds=asky&
 
 ```{code-cell} ipython3
 twomass_service = vo.dal.SIAService("https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?type=at&ds=asky&")
