@@ -173,7 +173,6 @@ The MER mosaic is organised into tiles, and positions near tile boundaries may o
 jupyter:
   source_hidden: true
 ---
-# Function to check if a field has exactly 4 MER images (one per band)
 def check_mer_tile_requirement(coord, search_radius=2.0):
     """Check whether a sky coordinate is covered by exactly 4 Euclid MER science images.
 
@@ -218,7 +217,6 @@ A control field is a sky region with no known galaxy clusters, used to character
 jupyter:
   source_hidden: true
 ---
-# Function to find a random control field that avoids all cluster locations
 def find_control_field_corrected(cluster_df, cluster_ra, cluster_dec, min_distance_arcmin=15, max_attempts=100):
     """Find a random control field offset from the known cluster catalog.
 
@@ -469,7 +467,6 @@ Displaying the cluster and control fields side by side at the same stretch gives
 jupyter:
   source_hidden: true
 ---
-# Improved normalization for consistent stretching between fields
 def normalize_with_consistent_stretch(cluster_cutouts, control_cutouts, lower_percentile=1, upper_percentile=99):
     """Normalize cluster and control cutouts using a shared percentile stretch.
     The RGB composite is assembled as H→R, J→G, VIS→B, which maps redder
@@ -765,7 +762,6 @@ The function prints the number of galaxies within bounds as a diagnostic, if a l
 jupyter:
   source_hidden: true
 ---
-# Function to apply DBSCAN clustering with validity check (needed due to query/cutout mismatch)
 def apply_dbscan_clustering(galaxy_df, wcs, rgb_image, field_name, eps=500, min_samples=18):
     """Apply DBSCAN to detect galaxy overdensities in a redshift-selected sample. DBSCAN operates on the 2-D projected
     spatial distribution of galaxies at approximately the same redshift.
@@ -935,7 +931,6 @@ The Y-H color vs H magnitude diagram reveals differences in galaxy properties be
 jupyter:
   source_hidden: true
 ---
-# Function to identify cluster members and field galaxies
 def identify_cluster_members(galaxy_df, labels, galaxy_coords, field_name):
     """Separate a galaxy sample into cluster members and field galaxies.
 
