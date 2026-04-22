@@ -50,7 +50,7 @@ This approach allows us to compare cluster and field galaxy properties and asses
 
 ```{code-cell} ipython3
 # Uncomment the next line to install dependencies if needed.
-# !pip install pandas numpy matplotlib s3fs tqdm astropy astroquery pyvo requests scikit-learn seaborn
+!pip install pandas numpy matplotlib s3fs tqdm astropy astroquery pyvo requests scikit-learn seaborn lxml
 ```
 
 ```{code-cell} ipython3
@@ -97,6 +97,11 @@ sns.set_palette("husl")
 
 Number = u.def_unit("Number")
 u.add_enabled_units([Number])
+```
+
+```{code-cell} ipython3
+import time
+starttime = time.time()
 ```
 
 ## 1. Loading the Cluster Catalog
@@ -2076,4 +2081,12 @@ if 'cluster_objects' in locals() and len(cluster_objects) > 0:
 
 **Contact:** [IRSA Helpdesk](https://irsa.ipac.caltech.edu/docs/help_desk.html) with questions or problems.
 
-**Runtime:** As of the date above, this notebook takes about N seconds to run to completion on a machine with N GB RAM and N CPU. This runtime is heavily dependent on archive servers which means runtime will vary for users.
+**Runtime:** As of the date above, this notebook takes about N seconds to run to completion on a machine with 64 GB RAM and N CPU (Fornax Large server). This runtime is heavily dependent on archive servers which means runtime will vary for users.
+
+```{code-cell} ipython3
+print("total duration", time.time() - starttime)
+```
+
+```{code-cell} ipython3
+
+```
