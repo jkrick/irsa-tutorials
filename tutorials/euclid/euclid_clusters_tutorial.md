@@ -169,6 +169,10 @@ print(f"  Found {len(cluster_mer_images)} MER science images")
 The MER mosaic is organised into tiles, and positions near tile boundaries may overlap two tiles, which complicates downloading. We check that both the cluster and control field each fall on exactly one tile before proceeding.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 # Function to check if a field has exactly 4 MER images (one per band)
 def check_mer_tile_requirement(coord, search_radius=2.0):
     """Check whether a sky coordinate is covered by exactly 4 Euclid MER science images.
@@ -210,6 +214,10 @@ def check_mer_tile_requirement(coord, search_radius=2.0):
 A control field is a sky region with no known galaxy clusters, used to characterise the general field galaxy population for comparison with the cluster environment. We select the control field by picking a random offset direction from a catalog cluster and rejecting any candidate that falls within `min_distance_arcmin` of any known cluster.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 # Function to find a random control field that avoids all cluster locations
 def find_control_field_corrected(cluster_df, cluster_ra, cluster_dec, min_distance_arcmin=15, max_attempts=100):
     """Find a random control field offset from the known cluster catalog.
@@ -310,7 +318,13 @@ s3 = s3fs.S3FileSystem(
     default_cache_type="readahead",
     default_fill_cache=True,
 )
+```
 
+```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def _download_band(band, mer_images, field_coord, field_id, cache_dir, s3):
     """Download one photometric band from S3 and write a cutout FITS to the local cache.
 
@@ -368,6 +382,10 @@ def _download_band(band, mer_images, field_coord, field_id, cache_dir, s3):
 Because the four photometric bands are independent of each other, `download_and_cache_field` downloads all of them in parallel, then reads back the cached cutouts and returns the image arrays together with the VIS-band WCS needed for later analysis.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def download_and_cache_field(mer_images, field_name, field_coord, field_id):
     """Stream cutout FITS images from S3 and cache them locally.
 
@@ -447,6 +465,10 @@ In the composite, galaxies with older, redder stellar populations appear orange-
 Displaying the cluster and control fields side by side at the same stretch gives an immediate visual impression of whether a concentration of red galaxies is present at the cluster position.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 # Improved normalization for consistent stretching between fields
 def normalize_with_consistent_stretch(cluster_cutouts, control_cutouts, lower_percentile=1, upper_percentile=99):
     """Normalize cluster and control cutouts using a shared percentile stretch.
@@ -500,6 +522,10 @@ def normalize_with_consistent_stretch(cluster_cutouts, control_cutouts, lower_pe
 ```
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def downsample(arr, factor=4):
     """Block-average a 2-D or 3-D image array by an integer factor for faster display.
 
@@ -542,8 +568,9 @@ def downsample(arr, factor=4):
         # Same reshape for each colour channel independently
         return arr[:h_t, :w_t].reshape(h_t // factor, factor,
                                        w_t // factor, factor, 3).mean(axis=(1, 3))
+```
 
-
+```{code-cell} ipython3
 # Process both fields with consistent normalization
 
 print("Using consistent stretching between cluster and control fields...")
@@ -595,8 +622,13 @@ table_phz = 'euclid_q1_phz_photo_z'
 
 # Convert cutout size to degrees
 cutout_deg = im_cutout.to(u.deg).value
+```
 
-# Function to query galaxies for a field
+```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def query_galaxies_for_field(ra, dec, field_name, redshift_center, redshift_width=0.1):
     """Query galaxies within a redshift slice around a sky position.
 
@@ -729,6 +761,10 @@ If the cluster or control field is close to a tile edge, this fraction may be la
 The function prints the number of galaxies within bounds as a diagnostic, if a large fraction are lost, consider selecting a field better centred on the tile.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 # Function to apply DBSCAN clustering with validity check (needed due to query/cutout mismatch)
 def apply_dbscan_clustering(galaxy_df, wcs, rgb_image, field_name, eps=500, min_samples=18):
     """Apply DBSCAN to detect galaxy overdensities in a redshift-selected sample. DBSCAN operates on the 2-D projected
@@ -895,6 +931,10 @@ We analyze the color-magnitude properties of cluster and field galaxies to under
 The Y-H color vs H magnitude diagram reveals differences in galaxy properties between cluster and field environments.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 # Function to identify cluster members and field galaxies
 def identify_cluster_members(galaxy_df, labels, galaxy_coords, field_name):
     """Separate a galaxy sample into cluster members and field galaxies.
@@ -1014,7 +1054,10 @@ Galaxies in a cluster at the same redshift — particularly passive ellipticals 
 We convert the uniform-aperture fluxes in the photo-z catalog to AB magnitudes and exclude objects outside physically reasonable bounds (H < 17 or H > 25, or |Y−H| outside [−0.5, 1.5]) to remove saturated sources, noise-dominated detections, and photometric outliers.
 
 ```{code-cell} ipython3
-# Calculate Y-H color and H magnitude
+---
+jupyter:
+  source_hidden: true
+---
 def calculate_color_magnitude(df):
     """Convert uniform-aperture fluxes to AB magnitudes and compute Y-H color.
 
@@ -1046,12 +1089,19 @@ def calculate_color_magnitude(df):
     df['Y_H_color'] = df['Y_mag'] - df['H_mag']
 
     return df
+```
 
+```{code-cell} ipython3
 # Calculate color-magnitude properties using only the needed fluxes
 cluster_cmd = calculate_color_magnitude(all_cluster_members[['flux_y_unif', 'flux_h_unif']])
 field_cmd = calculate_color_magnitude(all_field_galaxies[['flux_y_unif', 'flux_h_unif']])
+```
 
-# Remove outliers using plot boundaries (much simpler and more intuitive)
+```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def remove_outliers_bounds(df, h_min=17, h_max=25, yh_min=-0.5, yh_max=1.5):
     """Filter a colour-magnitude table to a physically motivated range.
 
@@ -1086,7 +1136,9 @@ def remove_outliers_bounds(df, h_min=17, h_max=25, yh_min=-0.5, yh_max=1.5):
         (df_clean['Y_H_color'] >= yh_min) & (df_clean['Y_H_color'] <= yh_max)
     ]
     return df_clean
+```
 
+```{code-cell} ipython3
 # Remove outliers from both populations (using plot boundaries)
 print("Removing outliers outside plot boundaries...")
 cluster_cmd_clean = remove_outliers_bounds(cluster_cmd)
@@ -1185,6 +1237,10 @@ field_object_ids   = all_field_galaxies["object_id"].tolist()
 `get_n_spectra` looks up each object in IRSA's spectrum-association table, opens the corresponding FITS files on S3, reads the spectral data, and caches the results locally so that re-running the notebook does not repeat the network requests.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def get_n_spectra(obj_ids, n=10):
     """
     Fetch up to n spectra for the given object_ids, stopping early once n are found.
@@ -1374,6 +1430,10 @@ z_min, z_max = cluster_z - redshift_width, cluster_z + redshift_width
 To compare spectra from different galaxies on the same plot we need to put them on a common scale. The three helper functions below handle this: `preprocess_spectrum` continuum-subtracts and normalizes a single spectrum, `build_stack` projects all spectra onto a shared wavelength grid and computes the median and scatter at each wavelength, and `lines_in_window` identifies which emission lines fall within the observed wavelength range at the cluster redshift.
 
 ```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def preprocess_spectrum(spec):
     """Continuum-remove + robust-normalize a spectrum for visualization."""
     w = np.asarray(spec['wave'].value, float)
@@ -1474,8 +1534,13 @@ w_grid = np.linspace(wmin, wmax, n_grid)
 # --- build stacks ---
 cluster_stack = build_stack(cluster_spectra, w_grid)
 field_stack   = build_stack(field_spectra,   w_grid)
+```
 
-# --- plot: two panels, close to your original, but readable ---
+```{code-cell} ipython3
+---
+jupyter:
+  source_hidden: true
+---
 def label_emission_line(ax, x, label, y=0.92, rotation=90, color='k'):
     """Place a vertical emission-line label at wavelength x."""
     ax.text(
@@ -1488,8 +1553,6 @@ def label_emission_line(ax, x, label, y=0.92, rotation=90, color='k'):
         va='top',
         bbox=dict(facecolor='white', edgecolor='none', alpha=0.6, pad=1)
     )
-
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 9), sharex=True)
 
 def plot_panel(ax, spectra_dict, stack, color, title):
     # individual processed spectra (faint)
@@ -1511,6 +1574,10 @@ def plot_panel(ax, spectra_dict, stack, color, title):
     ax.set_title(title)
     ax.grid(True, alpha=0.35)
     ax.legend(loc="upper right")
+```
+
+```{code-cell} ipython3
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 9), sharex=True)
 
 plot_panel(ax1, cluster_spectra, cluster_stack, "tab:blue", "Cluster spectra (continuum-subtracted + robust-normalized)")
 plot_panel(ax2, field_spectra,   field_stack,   "tab:green", "Control/field spectra (continuum-subtracted + robust-normalized)")
