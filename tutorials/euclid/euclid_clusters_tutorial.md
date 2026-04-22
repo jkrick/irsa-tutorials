@@ -100,7 +100,10 @@ u.add_enabled_units([Number])
 ```
 
 ## 1. Loading the Cluster Catalog
-We begin by loading the Euclid Q1 cluster catalog. The catalog contains 35 galaxy clusters with photometric redshifts, coordinates, and richness estimates from the PZWav algorithm.
+
+The Euclid Q1 cluster catalog from [arXiv:2503.19196](https://arxiv.org/abs/2503.19196) is not yet available as a direct download, so we read it from the HTML-rendered version of the paper.
+The HTML table sometimes contains Unicode formatting artifacts in the coordinate columns (e.g., typographic minus signs in negative declinations), which we normalize before use.
+The catalog contains 35 galaxy clusters with photometric redshifts, coordinates, and richness estimates from the PZWav algorithm.
 
 ```{code-cell} ipython3
 # Load the Euclid Q1 cluster catalog (https://arxiv.org/abs/2503.19196)
@@ -288,8 +291,9 @@ print(f"Control field:  RA: {control_ra:.4f}°, Dec: {control_dec:.4f}°")
 
 ## 3. Data Download and Caching
 
-Download and cache Euclid Q1 MER mosaics for both the selected cluster and control field with 12 arcmin cutouts (time consuming).
-The MER tile querying was already performed in Section 2 to ensure single-tile requirements.
+Rather than downloading full MER tiles — which can be hundreds of megabytes each — we stream 12-arcmin cutouts directly from the Euclid data hosted on AWS S3.
+A 12-arcmin field of view is large enough to capture both the cluster core and a surrounding field region, while keeping the download manageable.
+The cutouts are saved to a local cache so that re-running the notebook skips the network requests entirely.
 
 ```{code-cell} ipython3
 # Define parameters for cutouts
@@ -437,7 +441,10 @@ print(f"Control field cutout size: {control_cutouts['VIS'].shape}")
 
 ## 4. Multi-band Image Visualization
 
-Create and display VIS, Y, J, H bands plus RGB composite for both cluster and control fields.
+Before running the clustering algorithm it is useful to inspect the data directly.
+We display the four Euclid MER bands — the optical VIS band and the three NISP near-infrared bands (Y, J, H) — each in grayscale, alongside a false-color RGB composite in which H is mapped to red, J to green, and VIS to blue.
+In the composite, galaxies with older, redder stellar populations appear orange-to-red while bluer, star-forming galaxies appear cyan or blue.
+Displaying the cluster and control fields side by side at the same stretch gives an immediate visual impression of whether a concentration of red galaxies is present at the cluster position.
 
 ```{code-cell} ipython3
 # Improved normalization for consistent stretching between fields
@@ -577,6 +584,9 @@ plt.show()
 **Figure 1. Euclid Q1 MER cutouts of the cluster candidate and control field.**
 Top row: the cluster candidate field shown in the Euclid VIS band and the three NISP near-infrared bands (Y, J, H), followed by an RGB composite constructed as **R = H, G = J, B = VIS**.
 Bottom row: a nearby control field displayed in the same set of bands and with the same RGB mapping.
+
+The images give a qualitative impression of the cluster, but to identify members and compare their properties we need the photometric catalog.
+We query the Euclid Q1 MER photometric catalog and the photometric redshift (photo-z) catalog from IRSA, joining them on object ID and filtering to galaxies at the cluster redshift with well-constrained photo-z uncertainties.
 
 ```{code-cell} ipython3
 # Query galaxies in both fields with BOX search
@@ -998,6 +1008,11 @@ print(f"Total cluster members: {len(all_cluster_members)}")
 print(f"Total field galaxies: {len(all_field_galaxies)}")
 ```
 
+At z~0.4, the H band probes rest-frame near-infrared light dominated by old, low-mass stars, while the Y band samples shorter wavelengths where younger stellar populations contribute more.
+The Y−H color therefore tracks the age and star formation activity of the stellar population.
+Galaxies in a cluster at the same redshift — particularly passive ellipticals that have stopped forming stars — tend to share similar Y−H colors, producing a tight sequence in the color-magnitude diagram known as the red sequence.
+We convert the uniform-aperture fluxes in the photo-z catalog to AB magnitudes and exclude objects outside physically reasonable bounds (H < 17 or H > 25, or |Y−H| outside [−0.5, 1.5]) to remove saturated sources, noise-dominated detections, and photometric outliers.
+
 ```{code-cell} ipython3
 # Calculate Y-H color and H magnitude
 def calculate_color_magnitude(df):
@@ -1149,8 +1164,12 @@ A genuine cluster is expected to show a relatively **tighter and/or shifted colo
 
 ## 7. Spectral Analysis
 
-We extract 1D spectra for cluster and field galaxies from the Euclid spectroscopic data to analyze their emission line properties and star formation activity.
-The analysis includes spectral smoothing, flux normalization, and identification of nebular emission lines (Hα, Hβ, [OII], [OIII], etc.) that fall within the observed near-infrared wavelength range at the cluster's redshift. Note: This section is computationally intensive and may be skipped for initial analysis.
+Euclid's NISP instrument provides slitless near-infrared spectra covering roughly 9,200–18,800 Å for objects detected in the field.
+At the cluster redshift of z~0.43, common optical nebular emission lines — Hα (6563 Å), [OII] (3727 Å), [OIII] (5007 Å), and others — are redshifted into this wavelength window.
+Active star-forming galaxies show strong emission in these lines while passive (quiescent) galaxies do not, so comparing the median spectra of cluster members versus field galaxies can reveal whether the dense cluster environment has suppressed star formation.
+
+The analysis continuum-subtracts each spectrum, normalizes it to a common scale, and marks the expected observed wavelengths of nebular emission lines at the cluster redshift.
+Note: This section is computationally intensive and may be skipped for an initial look at the data.
 
 ```{code-cell} ipython3
 spectra_cache_dir = "data/irsa_spectra"
@@ -1307,6 +1326,8 @@ print(f"Cluster spectra retrieved: {len(cluster_spectra)}")
 print(f"Field spectra retrieved:   {len(field_spectra)}")
 print(f"Cache dir: {spectra_cache_dir}/")
 ```
+
+Before processing the spectra, we define the rest-frame wavelengths of the emission lines we expect to see and set the parameters for spectral preprocessing: a mild Gaussian smoothing to suppress pixel-to-pixel noise, a running-median window for continuum estimation, and the half-width of the photo-z slice used to set the expected wavelength range for each line.
 
 ```{code-cell} ipython3
 # Emission line rest-frame wavelengths (Angstroms) used to mark expected features on the spectra
@@ -1669,6 +1690,8 @@ for attempt in range(max_retries):
         print(f"NED search error: {e}")
         break
 ```
+
+We repeat the same 3-arcmin, redshift-filtered search at the control field center to confirm that no previously catalogued structures fall within the comparison region.
 
 ```{code-cell} ipython3
 # Try NED search with retry logic for control field
