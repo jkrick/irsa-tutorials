@@ -150,7 +150,8 @@ df.head(3)
 
 ## 2. A Cluster and Control Field Selection
 
-We use cluster EUCL-Q1-CL-1, a richly populated galaxy overdensity at z = 0.55 detected in the Euclid Q1 data. We also need a control field — a region of sky with no known clusters — to characterise the field galaxy population for comparison.
+We use cluster EUCL-Q1-CL-1, a richly populated galaxy overdensity at z = 0.55 detected in the Euclid Q1 data.
+We also need a control field — a region of sky with no known clusters — to characterise the field galaxy population for comparison.
 
 ```{code-cell} ipython3
 # Select cluster EUCL-Q1-CL-1 from the catalog
@@ -175,9 +176,11 @@ print(f"  Found {len(cluster_mer_images)} MER science images")
 A control field is a sky region with no known galaxy clusters, used to characterise the general field galaxy population for comparison with the cluster environment. 
 We select the control field by picking a random offset direction from a catalog cluster and rejecting any candidate control field that falls within `min_distance_arcmin` of any known cluster.
 
-The MER mosaic is organised into tiles, and positions near tile boundaries may overlap two tiles, which complicates downloading. We also check that both the cluster and control field each fall on exactly one tile before proceeding.
+The MER mosaic is organised into tiles, and positions near tile boundaries may overlap two tiles, which complicates downloading.
+We also check that both the cluster and control field each fall on exactly one tile before proceeding.
 
-We fix the random seed so the tutorial gives reproducible results by always picking the same control field. To explore a different control field, change the seed value or remove the seed entirely.
+We fix the random seed so the tutorial gives reproducible results by always picking the same control field.
+To explore a different control field, change the seed value or remove the seed entirely.
 
 ```{code-cell} ipython3
 ---
@@ -328,7 +331,8 @@ s3 = s3fs.S3FileSystem(
 )
 ```
 
-We now retrieve 12-arcmin cutouts centred on both the cluster and control fields. The first run streams data directly from the AWS S3 mirror; subsequent runs read from the local cache.
+We now retrieve 12-arcmin cutouts centred on both the cluster and control fields.
+The first run streams data directly from the AWS S3 mirror; subsequent runs read from the local cache.
 
 Because the four photometric bands are independent of each other, `download_and_cache_field` downloads all of them in parallel, then reads back the cached cutouts and returns the image arrays together with the VIS-band WCS needed for later analysis.
 
@@ -756,7 +760,8 @@ This approach is accurate over the small field of view of a single 12-arcmin cut
 **Parameter choices and customisation**
 
 The defaults `eps=500` and `min_samples=18` were tuned empirically for a 12-arcmin cutout at z~0.4 with Euclid Q1 data.
-They are not universal, the right values depend on the cluster redshift, richness, cutout size, and the depth of the photo-z sample. In particular:
+They are not universal, the right values depend on the cluster redshift, richness, cutout size, and the depth of the photo-z sample.
+In particular:
 
 - The physical scale probed by `eps` changes with redshift.
   At higher redshift the same angular scale subtends a larger physical distance, so you may want to increase `eps` to keep the probed scale near the virial radius.
@@ -848,7 +853,8 @@ def apply_dbscan_clustering(galaxy_df, wcs, rgb_image, field_name, eps=500, min_
     return labels, valid_galaxy_coords, n_clusters, n_noise
 ```
 
-A genuine cluster should produce a compact spatial overdensity in the redshift slice; the control field should show mostly noise. We run DBSCAN on both fields so we can compare the results directly.
+A genuine cluster should produce a compact spatial overdensity in the redshift slice; the control field should show mostly noise.
+We run DBSCAN on both fields so we can compare the results directly.
 
 ```{code-cell} ipython3
 # Apply clustering to both fields (with validity check)
@@ -914,7 +920,8 @@ plt.show()
 Each panel shows the RGB cutout (R = H, G = J, B = VIS) with points overplotted for sources selected within successive redshift slices and clustered using **DBSCAN** (density-based spatial clustering).
 Points assigned to a DBSCAN cluster are shown as colored circular markers; noise/outlier points (DBSCAN label = −1) are not shown.
 The left panel (cluster field) contains multiple spatial overdensities identified by DBSCAN, consistent with the expectation that a real cluster field may include one or more galaxy concentrations within the scanned redshift range.
-In the right panel (control field), no real clusters are found as expected. In some examples, a “cluster” can be identified around a bright star; this is interpreted as an **artifact-driven detection** (e.g., spurious sources near diffraction spikes/halos in Euclid Q1), rather than a genuine galaxy overdensity.
+In the right panel (control field), no real clusters are found as expected.
+In some examples, a “cluster” can be identified around a bright star; this is interpreted as an **artifact-driven detection** (e.g., spurious sources near diffraction spikes/halos in Euclid Q1), rather than a genuine galaxy overdensity.
 
 +++
 
@@ -1196,7 +1203,8 @@ plt.show()
 ```
 
 **Figure 3. Y−H versus H colour–magnitude diagram for the cluster candidates compared to the control field.**
-We construct an H-band magnitude and a Y−H colour from the Euclid Q1 uniform-aperture fluxes (`flux_h_unif`, `flux_y_unif`) by converting microjansky fluxes to AB magnitudes. Points show individual objects: cluster members (red) and field galaxies (blue).
+We construct an H-band magnitude and a Y−H colour from the Euclid Q1 uniform-aperture fluxes (`flux_h_unif`, `flux_y_unif`) by converting microjansky fluxes to AB magnitudes.
+Points show individual objects: cluster members (red) and field galaxies (blue).
 
 To highlight the dominant loci beyond the sparse scatter, we overlay density contours derived from a 2D Gaussian kernel density estimate (KDE) computed in the \((H,\,Y-H)\) plane separately for the cluster and field samples.
 The KDE is evaluated on a regular grid spanning the plotted limits, and three contour levels are drawn for each population (solid red for cluster; dashed blue for field).
@@ -1225,7 +1233,8 @@ cluster_object_ids = all_cluster_members["object_id"].tolist()
 field_object_ids   = all_field_galaxies["object_id"].tolist()
 ```
 
-We retrieve up to ten spectra for each population. Ten spectra per group is sufficient to show whether the cluster and field populations differ in their emission-line properties.
+We retrieve up to ten spectra for each population.
+Ten spectra per group is sufficient to show whether the cluster and field populations differ in their emission-line properties.
 
 ```{code-cell} ipython3
 ---
@@ -1416,7 +1425,8 @@ redshift_width = 0.12
 z_min, z_max = cluster_z - redshift_width, cluster_z + redshift_width
 ```
 
-To compare spectra from different galaxies on the same plot we need to put them on a common scale. The three helper functions below handle this: `preprocess_spectrum` continuum-subtracts and normalizes a single spectrum, `build_stack` projects all spectra onto a shared wavelength grid and computes the median and scatter at each wavelength, and `lines_in_window` identifies which emission lines fall within the observed wavelength range at the cluster redshift.
+To compare spectra from different galaxies on the same plot we need to put them on a common scale.
+The three helper functions below handle this: `preprocess_spectrum` continuum-subtracts and normalizes a single spectrum, `build_stack` projects all spectra onto a shared wavelength grid and computes the median and scatter at each wavelength, and `lines_in_window` identifies which emission lines fall within the observed wavelength range at the cluster redshift.
 
 ```{code-cell} ipython3
 ---
@@ -1620,7 +1630,8 @@ Euclid Q1 spectra contain known instrumental artifacts that are addressed in DR1
 
 ## 8. NED Database Search
 
-We search the NASA/IPAC Extragalactic Database (NED) for spectroscopically confirmed objects within 3 arcmin of both the cluster and control field centers, filtered to the cluster redshift slice. This provides an independent check of cluster membership using spectroscopic redshifts and lets us verify that the control field contains no known structures at the cluster redshift.
+We search the NASA/IPAC Extragalactic Database (NED) for spectroscopically confirmed objects within 3 arcmin of both the cluster and control field centers, filtered to the cluster redshift slice.
+This provides an independent check of cluster membership using spectroscopic redshifts and lets us verify that the control field contains no known structures at the cluster redshift.
 
 ```{code-cell} ipython3
 ---
@@ -1793,7 +1804,8 @@ Filled red circles are Euclid photometric cluster members identified by DBSCAN.
 Open blue circles are NED sources with spectroscopic redshifts in the cluster redshift slice; a blue circle overlapping a red dot indicates a source detected by both.
 The control field (right) contains no NED detections in the cluster redshift range, as expected for a blank field.
 
-As a final validation, we cross-match the Euclid photometric cluster members against NED sources that have spectroscopic redshifts and compare their redshift estimates directly. Agreement between the Euclid photo-z values and the NED spectroscopic redshifts would confirm that our photometric selection is picking up real cluster members.
+As a final validation, we cross-match the Euclid photometric cluster members against NED sources that have spectroscopic redshifts and compare their redshift estimates directly.
+Agreement between the Euclid photo-z values and the NED spectroscopic redshifts would confirm that our photometric selection is picking up real cluster members.
 
 ```{code-cell} ipython3
 # Cross-match Euclid and NED sources for redshift comparison
