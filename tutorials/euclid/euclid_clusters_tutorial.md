@@ -89,7 +89,7 @@ from sklearn.cluster import DBSCAN
 
 # Statistics and signal processing
 from scipy.stats import gaussian_kde
-from scipy.ndimage import gaussian_filter1d
+from scipy.ndimage import gaussian_filter1d, median_filter
 
 # Set up plotting style
 plt.style.use('default')
@@ -152,11 +152,11 @@ df.head(3)
 
 ## 2. A Cluster and Control Field Selection
 
-We use cluster EUCL-Q1-CL-4, a richly populated galaxy overdensity at z = 0.43 detected in the Euclid Q1 data. We also need a control field — a region of sky with no known clusters — to characterise the field galaxy population for comparison.
+We use cluster EUCL-Q1-CL-1, a richly populated galaxy overdensity at z = 0.55 detected in the Euclid Q1 data. We also need a control field — a region of sky with no known clusters — to characterise the field galaxy population for comparison.
 
 ```{code-cell} ipython3
-# Select cluster EUCL-Q1-CL-4 from the catalog
-cluster = df[df['ID'] == 'EUCL-Q1-CL-4'].iloc[0]
+# Select cluster EUCL-Q1-CL-1 from the catalog
+cluster = df[df['ID'] == 'EUCL-Q1-CL-1'].iloc[0]
 cluster_coord = SkyCoord(ra=cluster['RAPZWav'], dec=cluster['DecPZWav'], unit='deg')
 
 print(f"Cluster: {cluster['NAME']}")
@@ -287,7 +287,12 @@ def find_control_field_corrected(cluster_df, cluster_ra, cluster_dec, min_distan
 
 We now search for a control field. Keeping the control field on a single MER tile — just like the cluster field — keeps the data download straightforward and avoids mosaicking artefacts at tile edges.
 
+We fix the random seed so the tutorial gives reproducible results. To explore a different control field, change the seed value or remove the seed entirely.
+
 ```{code-cell} ipython3
+# Set random seed so results are reproducible — change or remove to explore different control fields
+np.random.seed(45)
+
 # Find a control field that avoids all known clusters
 control_ra, control_dec = find_control_field_corrected(df, cluster['RAPZWav'], cluster['DecPZWav'])
 control_coord = SkyCoord(ra=control_ra, dec=control_dec, unit='deg')
@@ -1217,7 +1222,7 @@ A genuine cluster is expected to show a relatively **tighter and/or shifted colo
 ## 7. Spectral Analysis
 
 Euclid's NISP instrument provides slitless near-infrared spectra covering roughly 9,200–18,800 Å for objects detected in the field.
-At the cluster redshift of z~0.43, common optical nebular emission lines — Hα (6563 Å), [OII] (3727 Å), [OIII] (5007 Å), and others — are redshifted into this wavelength window.
+At the cluster redshift of z~0.55, common optical nebular emission lines — Hα (6563 Å), [OII] (3727 Å), [OIII] (5007 Å), and others — are redshifted into this wavelength window.
 Active star-forming galaxies show strong emission in these lines while passive (quiescent) galaxies do not, so comparing the median spectra of cluster members versus field galaxies can reveal whether the dense cluster environment has suppressed star formation.
 
 The analysis continuum-subtracts each spectrum, normalizes it to a common scale, and marks the expected observed wavelengths of nebular emission lines at the cluster redshift.
@@ -1626,7 +1631,7 @@ This might provide additional information on cluster members. We search a smalle
 # Get coordinates from our analysis
 cluster_ra = cluster['RAPZWav']  # 60.4686 degrees
 cluster_dec = cluster['DecPZWav']  # -50.4780 degrees
-cluster_z = cluster['zPZWav']  # 0.43
+cluster_z = cluster['zPZWav']  # 0.55
 
 # Search NED for cluster center
 print("=== SEARCHING NED FOR CLUSTER CENTER ===")
@@ -1775,15 +1780,24 @@ for attempt in range(max_retries):
 
         print(f"Control field NED search: {len(control_results)} total objects, {len(control_objects)} in z={z_min:.2f}-{z_max:.2f}")
 
+        ra_col  = pick_col(control_results, ra_candidates)
+        dec_col = pick_col(control_results, dec_candidates)
+        if ra_col is None or dec_col is None:
+            raise KeyError(f"Could not find RA/Dec columns in NED table. Columns are: {control_results.colnames}")
+        use_deg = (('deg' in ra_col.lower()) or ra_col.lower().endswith('_deg')) and (('deg' in dec_col.lower()) or dec_col.lower().endswith('_deg'))
+        coord_unit = ('deg', 'deg') if use_deg else (u.hourangle, u.deg)
+
         if len(control_objects) > 0:
             print("\\nObjects in control field redshift range:")
+            ctrl_center = SkyCoord(ra=control_ra, dec=control_dec, unit='deg')
             for obj in control_objects:
-                obj_coord = SkyCoord(ra=obj['RA(deg)'], dec=obj['DEC(deg)'], unit='deg')
-                control_coord = SkyCoord(ra=control_ra, dec=control_dec, unit='deg')
-                sep = control_coord.separation(obj_coord).to(u.arcmin).value
+                obj_coord = SkyCoord(ra=obj[ra_col], dec=obj[dec_col], unit=coord_unit)
+                sep = ctrl_center.separation(obj_coord).to(u.arcmin).value
                 print(f"  {obj['Object Name']} - {obj['Type']} - z={obj['Redshift']:.3f} - {sep:.1f}'")
 
-            print(f"\\nControl field types: {dict(control_objects['Type'].value_counts())}")
+            types = np.array([str(t) for t in control_objects['Type']], dtype=str)
+            unique, counts = np.unique(types, return_counts=True)
+            print("\\nControl field types:", dict(zip(unique, counts)))
         else:
             print("No objects found in control field redshift range")
 
