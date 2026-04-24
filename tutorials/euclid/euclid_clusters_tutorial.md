@@ -57,7 +57,7 @@ This approach allows us to compare cluster and field galaxy properties and asses
 
 ```{code-cell} ipython3
 # Uncomment the next line to install dependencies if needed.
-!pip install pandas numpy matplotlib s3fs tqdm astropy astroquery pyvo requests scikit-learn seaborn lxml
+# !pip install pandas numpy matplotlib s3fs tqdm astropy astroquery pyvo requests scikit-learn seaborn lxml
 ```
 
 ```{code-cell} ipython3
