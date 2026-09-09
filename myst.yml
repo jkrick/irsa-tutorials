@@ -6,6 +6,7 @@ project:
   description: IRSA Python Notebook tutorials to demostrate accessing data served by the NASA/IPAC Infrared Science Archive (IRSA)
   keywords: [astronomy]
   github: https://github.com/Caltech-IPAC/irsa-tutorials/
+  copyright: California Institute of Technology
   license:
     id: BSD-3-Clause
     url: https://github.com/Caltech-IPAC/irsa-tutorials/blob/main/LICENSE
@@ -29,7 +30,7 @@ project:
     # note: we need to use the built plugin bundle here so make sure to build it with
     # `cd plugins && npm install && npm run build` after any changes to the plugins/src/
     - plugins/dist/notebook-gallery.mjs
-    
+
 extends:
   - toc.yml
 site:
